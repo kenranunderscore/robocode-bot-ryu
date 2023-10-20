@@ -1,29 +1,35 @@
-cabal-version:      3.4
-name:               Ryu
-version:            0.1.0.0
+cabal-version:   3.4
+name:            Ryu
+version:         0.1.0.0
+
 -- synopsis:
 -- description:
-license:            MIT
-license-file:       LICENSE
-author:             Johannes Maier
-maintainer:         johannes.maier@active-group.de
+license:         MIT
+license-file:    LICENSE
+author:          Johannes Maier
+maintainer:      johannes.maier@active-group.de
+
 -- copyright:
-category:           Game
-build-type:         Simple
-extra-doc-files:    CHANGELOG.md
+category:        Game
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
 -- extra-source-files:
 
 common warnings
-    ghc-options: -Wall
+  ghc-options: -Wall
 
 executable Ryu
-    import:           warnings
-    main-is:          Main.hs
-    -- other-modules:
-    -- other-extensions:
-    build-depends:    base
-                    , bytestring
-                    , websockets
-                    , aeson
-    hs-source-dirs:   src-exe
-    default-language: GHC2021
+  import:           warnings
+  main-is:          Main.hs
+
+  -- other-modules:
+  -- other-extensions:
+  build-depends:
+    , aeson
+    , base
+    , bytestring
+    , websockets
+
+  hs-source-dirs:   src-exe
+  default-language: GHC2021
