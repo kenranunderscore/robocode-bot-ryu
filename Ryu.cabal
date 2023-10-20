@@ -22,13 +22,12 @@ common warnings
 executable Ryu
   import:           warnings
   main-is:          Main.hs
-
-  -- other-modules:
-  -- other-extensions:
+  other-modules:    Robocode.Message
   build-depends:
     , aeson
     , base
     , bytestring
+    , text
     , websockets
 
   hs-source-dirs:   src-exe

@@ -1,5 +1,4 @@
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -8,21 +7,19 @@ import Control.Monad
 import Data.Aeson ((.=))
 import Data.Aeson qualified as Json
 import Data.Aeson.KeyMap qualified as KM
-import Data.ByteString.Lazy qualified as LBS
-import Network.WebSockets
+import Network.WebSockets qualified as WS
 import System.Environment qualified as Env
 import System.IO (BufferMode (..), hSetBuffering, stdout)
 
-app :: Connection -> IO b
+import Robocode.Message
+
+app :: WS.Connection -> IO b
 app conn = do
     secret <- Env.getEnv "SERVER_SECRET"
     putStrLn "connected!"
 
     -- receive server handshake
-    evt <- receiveEvent conn
-    putStrLn "\n"
-    print evt
-    let Just sessionId = KM.lookup "sessionId" evt.payload
+    ServerHandshake sessionId <- receiveMessage conn
     putStrLn "\n"
 
     -- send bot handshake
@@ -36,42 +33,37 @@ app conn = do
                 , "secret" .= secret
                 ]
     putStrLn $ "Sending handshake: " <> show (Json.encode botHandshake)
-    sendTextData conn $ Json.encode botHandshake
+    WS.sendTextData conn $ Json.encode botHandshake
 
     printNextMessage conn
 
     let botReady =
             Json.object ["type" .= Json.String "BotReady"]
-    sendTextData conn $ Json.encode botReady
+    WS.sendTextData conn $ Json.encode botReady
 
     mainLoop conn
 
-mainLoop :: Connection -> IO b
+mainLoop :: WS.Connection -> IO b
 mainLoop conn = forever $ do
-    evt <- receiveEvent conn
-    print evt
+    msg <- receiveMessage conn
+    print msg
 
 newtype Event = Event {payload :: KM.KeyMap Json.Value}
     deriving newtype (Show, Json.FromJSON)
 
-receiveEvent :: Connection -> IO Event
-receiveEvent conn = do
-    raw <- receiveData conn
+receiveMessage :: WS.Connection -> IO Message
+receiveMessage conn = do
+    raw <- WS.receiveData conn
     case Json.eitherDecode' raw of
         Left err -> fail $ show err
-        Right (Json.Object o) ->
-            pure $ Event o
-        Right unexpected ->
-            fail $ "Unexpected event JSON: " <> show unexpected
+        Right msg -> pure msg
 
-printNextMessage :: Connection -> IO ()
+printNextMessage :: WS.Connection -> IO ()
 printNextMessage conn = do
-    msg <- receiveData conn
-    putStrLn "\n"
-    LBS.putStr msg
-    putStrLn "\n"
+    msg <- receiveMessage conn
+    print msg
 
 main :: IO ()
 main = do
     hSetBuffering stdout LineBuffering
-    runClient "localhost" 7654 "/" app
+    WS.runClient "localhost" 7654 "/" app
