@@ -1,0 +1,15 @@
+{
+  "name": "Ryu",
+  "version": "0.1",
+  "authors": [
+    "Johannes Maier"
+  ],
+  "description": "Foo bar",
+  "homepage": "",
+  "countryCodes": [
+    "us",
+    "de"
+  ],
+  "platform": "???",
+  "programmingLang": "Haskell"
+}
