@@ -8,16 +8,31 @@
 
   outputs = { self, ... }@inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import inputs.nixpkgs { inherit system; };
+      let
+        pkgs = import inputs.nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.default ];
+        };
       in {
-        devShells.default = pkgs.mkShell {
+        devShells.default = pkgs.haskellPackages.shellFor {
+          packages = p: [ p.Ryu ];
           nativeBuildInputs = [
-            pkgs.haskell.packages.ghc94.haskell-language-server
             pkgs.cabal-install
-            pkgs.haskell.compiler.ghc94
-            pkgs.zlib
+            pkgs.haskellPackages.cabal-fmt
+            pkgs.haskellPackages.fourmolu
+            pkgs.haskellPackages.haskell-language-server
             pkgs.nixfmt
           ];
         };
-      });
+      }) // {
+        overlays.default = final: prev: {
+          haskellPackages = prev.haskellPackages.override (old: {
+            overrides =
+              final.lib.composeExtensions (old.overrides or (_: _: { }))
+              (hfinal: hprev: {
+                Ryu = hfinal.callCabal2nix "Ryu" (final.lib.cleanSource ./.) { };
+              });
+          });
+        };
+      };
 }
