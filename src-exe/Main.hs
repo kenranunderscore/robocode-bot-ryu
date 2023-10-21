@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -7,6 +8,7 @@ import Control.Monad
 import Data.Aeson ((.=))
 import Data.Aeson qualified as Json
 import Data.Aeson.KeyMap qualified as KM
+import Data.IORef
 import Network.WebSockets qualified as WS
 import System.Environment qualified as Env
 import System.IO (BufferMode (..), hSetBuffering, stdout)
@@ -44,9 +46,23 @@ app conn = do
     mainLoop conn
 
 mainLoop :: WS.Connection -> IO b
-mainLoop conn = forever $ do
-    msg <- receiveMessage conn
-    print msg
+mainLoop conn = do
+    turnSignRef <- newIORef @Double 1.0
+    forever $ do
+        msg <- receiveMessage conn
+        case msg of
+            TickEventForBot e -> do
+                unless (null e.events) $
+                    modifyIORef' turnSignRef (* (-1))
+                sign <- readIORef turnSignRef
+                let intent =
+                        Json.object
+                            [ "targetSpeed" .= Json.Number 1.0
+                            , "turnRate" .= (sign * 30.0)
+                            , "type" .= Json.String "BotIntent"
+                            ]
+                WS.sendTextData conn $ Json.encode intent
+            _ -> print msg
 
 newtype Event = Event {payload :: KM.KeyMap Json.Value}
     deriving newtype (Show, Json.FromJSON)
