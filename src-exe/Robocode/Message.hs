@@ -136,11 +136,35 @@ data BotEvent
     | TeamMessageEvent
     deriving stock (Eq, Show)
 
+data BotState = BotState
+    { isDroid :: Bool
+    , energy :: Double
+    , x :: Double
+    , y :: Double
+    , direction :: Double
+    , gunDirection :: Double
+    , radarDirection :: Double
+    , radarSweep :: Double
+    , speed :: Double
+    , turnRate :: Double
+    , gunTurnRate :: Double
+    , radarTurnRate :: Double
+    , gunHeat :: Double
+    , bodyColor :: Maybe Color
+    , radarColor :: Maybe Color
+    , gunColor :: Maybe Color
+    , bulletColor :: Maybe Color
+    , scanColor :: Maybe Color
+    , tracksColor :: Maybe Color
+    , turretColor :: Maybe Color
+    }
+    deriving stock (Eq, Show)
+
 data TickEventPayload = TickEventPayload
     { roundNumber :: Int
     , enemyCount :: Int
-    , -- , botState :: ?
-      -- , bulletStates :: ?
+    , botState :: BotState
+    , -- , bulletStates :: ?
       events :: [BotEvent]
     }
     deriving stock (Eq, Show)
@@ -201,6 +225,7 @@ instance Json.FromJSON Message where
                         TickEventPayload
                             <$> o .: "roundNumber"
                             <*> o .: "enemyCount"
+                            <*> o .: "botState"
                             <*> o .: "events"
                     pure $ TickEventForBot payload
                 t -> pure $ Unknown t
@@ -314,3 +339,27 @@ instance Json.FromJSON BulletHitBulletEventPayload where
             <$> o .: "turnNumber"
             <*> o .: "bullet"
             <*> o .: "hitBullet"
+
+instance Json.FromJSON BotState where
+    parseJSON = Json.withObject "BotState" $ \o ->
+        BotState
+            <$> o .: "isDroid"
+            <*> o .: "energy"
+            <*> o .: "x"
+            <*> o .: "y"
+            <*> o .: "direction"
+            <*> o .: "gunDirection"
+            <*> o .: "radarDirection"
+            <*> o .: "radarSweep"
+            <*> o .: "speed"
+            <*> o .: "turnRate"
+            <*> o .: "gunTurnRate"
+            <*> o .: "radarTurnRate"
+            <*> o .: "gunHeat"
+            <*> o .:? "bodyColor"
+            <*> o .:? "radarColor"
+            <*> o .:? "gunColor"
+            <*> o .:? "bulletColor"
+            <*> o .:? "scanColor"
+            <*> o .:? "tracksColor"
+            <*> o .:? "turretColor"

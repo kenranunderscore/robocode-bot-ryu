@@ -51,6 +51,7 @@ mainLoop conn = do
         msg <- receiveMessage conn
         case msg of
             TickEventForBot e -> do
+                print e.botState
                 unless (null e.events) $
                     modifyIORef' turnSignRef (* (-1))
                 sign <- readIORef turnSignRef
