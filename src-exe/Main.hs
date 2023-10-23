@@ -7,7 +7,6 @@ module Main where
 import Control.Monad
 import Data.Aeson ((.=))
 import Data.Aeson qualified as Json
-import Data.Aeson.KeyMap qualified as KM
 import Data.IORef
 import Network.WebSockets qualified as WS
 import System.Environment qualified as Env
@@ -60,12 +59,10 @@ mainLoop conn = do
                             [ "targetSpeed" .= Json.Number 1.0
                             , "turnRate" .= (sign * 30.0)
                             , "type" .= Json.String "BotIntent"
+                            , "firepower" .= mkFirepower 0.2
                             ]
                 WS.sendTextData conn $ Json.encode intent
             _ -> print msg
-
-newtype Event = Event {payload :: KM.KeyMap Json.Value}
-    deriving newtype (Show, Json.FromJSON)
 
 receiveMessage :: WS.Connection -> IO Message
 receiveMessage conn = do
